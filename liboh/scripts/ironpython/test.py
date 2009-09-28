@@ -6,6 +6,8 @@ import protocol.Persistence_pb2 as pbPer
 import protocol.MessageHeader_pb2 as pbHead
 
 from Sirikata.Runtime import HostedObject
+#import Sirikata.Runtime.Time
+import Sirikata.Runtime
 print dir(HostedObject)
 import System
 import util
@@ -15,15 +17,20 @@ DEBUG_OUTPUT=False
 class exampleclass:
     def __init__(self):
         self.val=0
+        HostedObject.SetupTickFunction(self.tick,Sirikata.Runtime.Time(2000000))
     def func(self,otherval):
         self.val+=otherval
         print self.val
         return self.val;
+    def dailyPrint(self):
+        print "TIMEOUT"
+        HostedObject.AsyncWait(self.dailyPrint,Sirikata.Runtime.Time(8000000));
     def reallyProcessRPC(self,serialheader,name,serialarg):
         print "Got an RPC named",name
         header = pbHead.Header()
         header.ParseFromString(util.fromByteArray(serialheader))
         if name == "RetObj":
+            HostedObject.AsyncWait(self.dailyPrint,Sirikata.Runtime.Time(8000000));
             retobj = pbSiri.RetObj()
             #print repr(util.fromByteArray(serialarg))
             try:
@@ -147,7 +154,6 @@ class exampleclass:
 
     def processMessage(self,header,body):
         print "Got a message"
-    def tick(self,tim):
-        x=str(tim)
-        print "Current time is "+x;
+    def tick(self):
+        print "tick";
         #HostedObject.SendMessage(tuple(Byte(ord(c)) for c in x));# this seems to get into hosted object...but fails due to bad encoding
